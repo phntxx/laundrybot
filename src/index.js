@@ -90,7 +90,7 @@ discordClient.on("message", (message) => {
 
       if (content.includes("!status")) {
         message.channel.send("Loading...");
-        get("discord", (message) => message.channel.send(message));
+        get("discord", (msg) => message.channel.send(msg));
       }
     }
   }
