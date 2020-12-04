@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  laundrybot:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./conf:/usr/src/app/conf

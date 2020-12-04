@@ -1,0 +1,14 @@
+{
+  "discord": {
+    "authToken": "",
+    "clientId": ""
+  },
+  "bot": {
+    "message": "",
+    "onEmoji": "",
+    "offEmoji": ""
+  },
+  "api": {
+    "url": ""
+  }
+}
