@@ -1,4 +1,5 @@
 const discord = require("discord.js");
+const telegram = require("telegram-bot-api");
 const fetch = require("node-fetch");
 const fs = require("fs");
 
@@ -10,6 +11,9 @@ const settings = JSON.parse(settingsData);
  */
 const discordClient = new discord.Client();
 discordClient.login(settings.discord.authToken);
+
+const telegramClient = new telegram({ token: settings.telegram.authToken });
+telegramClient.getMe().then(console.log).catch(console.err);
 
 const botWasMentioned = (m) => {
   if (m.channel.type === "text" && m.mentions.members.first() !== undefined) {
@@ -33,25 +37,41 @@ const toDate = (date) => {
   }
 };
 
-const emoji = (status) => {
-  return status === "ON" ? settings.bot.onEmoji : settings.bot.offEmoji;
+const emoji = (service, status) => {
+  if (service === "discord") {
+    return status === "ON"
+      ? settings.discord.onEmoji
+      : settings.discord.offEmoji;
+  } else if (service === "telegram") {
+    return status === "ON"
+      ? settings.telegram.onEmoji
+      : settings.telegram.offEmoji;
+  }
 };
 
-const get = (message) => {
+const get = (service, callback) => {
   fetch(settings.api.url, { method: "Get" })
     .then((res) => res.json())
     .then((json) => {
       let msg = "";
 
       json.items.forEach((item) => {
-        msg += settings.bot.message
-          .replace("%i", parseInt(item.machineId) + 1)
-          .replace("%e", emoji(item.state))
-          .replace("%s", item.state)
-          .replace("%t", toDate(Date.now() / 1000 - item.date));
+        if (service === "discord") {
+          msg += settings.discord.message
+            .replace("%i", parseInt(item.machineId) + 1)
+            .replace("%e", emoji(service, item.state))
+            .replace("%s", item.state)
+            .replace("%t", toDate(Date.now() / 1000 - item.date));
+        } else {
+          msg += settings.telegram.message
+            .replace("%i", parseInt(item.machineId) + 1)
+            .replace("%e", emoji(service, item.state))
+            .replace("%s", item.state)
+            .replace("%t", toDate(Date.now() / 1000 - item.date));
+        }
       });
 
-      message.channel.send(msg);
+      callback(msg);
     });
 };
 
@@ -70,9 +90,33 @@ discordClient.on("message", (message) => {
 
       if (content.includes("!status")) {
         message.channel.send("Loading...");
-        get(message);
+        get("discord", (message) => message.channel.send(message));
       }
     }
+  }
+});
+
+telegramClient.on("update", (update) => {
+  console.log(update);
+
+  let content = update.message.text.toLowerCase();
+
+  if (content.includes("/help")) {
+    telegramClient.sendMessage({
+      chat_id: update.message.chat.id,
+      parse_mode: "markdown",
+      text: "TODO: Write Help",
+    });
+  }
+
+  if (content.includes("/start") || content.includes("/status")) {
+    get("telegram", (message) =>
+      telegramClient.sendMessage({
+        chat_id: update.message.chat.id,
+        parse_mode: "markdown",
+        text: message,
+      })
+    );
   }
 });
 
@@ -82,4 +126,10 @@ discordClient.on("message", (message) => {
  */
 discordClient.once("ready", () => {
   discordClient.user.setStatus("online");
+});
+
+const messageProvider = new telegram.GetUpdateMessageProvider();
+telegramClient.setMessageProvider(messageProvider);
+telegramClient.start().then(() => {
+  console.log("API has started");
 });

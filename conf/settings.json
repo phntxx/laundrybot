@@ -1,9 +1,13 @@
 {
   "discord": {
     "authToken": "",
-    "clientId": ""
+    "clientId": "",
+    "message": "",
+    "onEmoji": "",
+    "offEmoji": ""
   },
-  "bot": {
+  "telegram": {
+    "authToken": "",
     "message": "",
     "onEmoji": "",
     "offEmoji": ""
