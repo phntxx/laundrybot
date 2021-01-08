@@ -126,6 +126,7 @@ telegramClient.on("update", (update) => {
  */
 discordClient.once("ready", () => {
   discordClient.user.setStatus("online");
+  discordClient.user.setActivity("Washer go brrr", { type: "WATCHING" });
 });
 
 const messageProvider = new telegram.GetUpdateMessageProvider();
